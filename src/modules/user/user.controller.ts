@@ -17,13 +17,6 @@ import { CreateUserDto, UpdateUserDto } from './dto/user-dto';
 export class UserController {
     constructor(private readonly userService: UserService) { }
 
-    @Post()
-    @ApiOperation({ summary: 'Create a new user' })
-    @ApiBody({ type: CreateUserDto })
-    @ApiResponse({ status: 201, description: 'User created successfully.' })
-    async create(@Body() createUserDto: CreateUserDto) {
-        return this.userService.create(createUserDto);
-    }
 
     @Get()
     @ApiOperation({ summary: 'Get all users' })
@@ -52,7 +45,8 @@ export class UserController {
     async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
         const user = await this.userService.getById(id);
         if (!user) throw new NotFoundException('User not found');
-        return this.userService.update(id, updateUserDto);
+        await this.userService.update(id, updateUserDto);
+        return { message: 'User updated successfully.' };
     }
 
     @Delete(':id')
@@ -63,6 +57,7 @@ export class UserController {
     async delete(@Param('id') id: string) {
         const user = await this.userService.getById(id);
         if (!user) throw new NotFoundException('User not found');
-        return this.userService.delete(id);
+        await this.userService.delete(id);
+        return { message: 'User deleted successfully.' };
     }
 }

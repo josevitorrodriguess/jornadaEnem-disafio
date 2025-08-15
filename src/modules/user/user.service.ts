@@ -22,31 +22,35 @@ export class UserService {
         return this.prisma.user.findUnique({ where: { id } });
     }
 
-async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
-    if (data.password && typeof data.password === 'string') {
-        const user = await this.prisma.user.findUnique({ where: { id } });
+    async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
+        if (data.password && typeof data.password === 'string') {
+            const user = await this.prisma.user.findUnique({ where: { id } });
 
-        if (!user) {
-            throw new Error('Usuário não encontrado');
+            if (!user) {
+                throw new Error('Usuário não encontrado');
+            }
+
+            const isSamePassword = await comparePasswords(
+                data.password,
+                user.password
+            );
+
+            if (isSamePassword) {
+                delete data.password;
+            } else {
+                data.password = await hashPassword(data.password);
+            }
         }
 
-        const isSamePassword = await comparePasswords(
-            data.password,
-            user.password
-        );
-
-        if (isSamePassword) {
-            delete data.password;
-        } else {
-            data.password = await hashPassword(data.password);
-        }
+        return this.prisma.user.update({
+            where: { id },
+            data,
+        });
     }
 
-    return this.prisma.user.update({
-        where: { id },
-        data,
-    });
-}
+    async findByEmail(email: string): Promise<User | null> {
+        return this.prisma.user.findUnique({ where: { email } });
+    }
 
 
     async delete(id: string): Promise<User> {
